@@ -238,24 +238,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
-const DEEPL_KEY = "433a6554-ee2e-447e-abc5-a67011a18cb3:fx";        // WE WILL NEED TO REMOVE THIS probably
+const DEEPL_KEY = '433a6554-ee2e-447e-abc5-a67011a18cb3:fx';        // WE WILL NEED TO REMOVE THIS probably
 
 // Context menu button 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
-    id: "cabTranslate",
-    title: "DeepL translate",
+    id: 'cabTranslate',
+    title: 'DeepL translate',
     contexts: ["selection"]
   });
 });
 
 // Translate text using an async call to DeepL API and return the translated text
-async function translateText(text, targetLang = "EN") {
-  const response = await fetch("https://api-free.deepl.com/v2/translate", {
-    method: "POST",
+async function translateText(text, targetLang = 'EN') {
+  const response = await fetch('https://api-free.deepl.com/v2/translate', {
+    method: 'POST',
     headers: {
-      "Authorization": `DeepL-Auth-Key ${DEEPL_KEY}`,
-      "Content-Type": "application/json"
+      'Authorization': `DeepL-Auth-Key ${DEEPL_KEY}`,
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify({
       text: [text],
@@ -266,7 +266,7 @@ async function translateText(text, targetLang = "EN") {
   const data = await response.json();
 
   if (!data.translations || !data.translations.length) {
-    throw new Error("No translation returned");
+    throw new Error('No translation returned');
   }
 
   return data.translations[0].text;
@@ -282,10 +282,18 @@ function insertTranslation(tabId, translatedText) {
 
       const range = selection.getRangeAt(0);
 
+      const span = document.createElement('span');
+      span.textContent = text;
+
+      span.style.backgroundColor = '#ffefc5';
+      span.style.fontStyle = 'italic';
+      span.style.fontSize = '0.9em';
+      span.style.padding = '0.25em';
+
       const translatedSection = document.createDocumentFragment();
-      translatedSection.appendChild(document.createElement("br"));
-      translatedSection.appendChild(document.createTextNode(text));
-      translatedSection.appendChild(document.createElement("br"));
+      translatedSection.appendChild(document.createElement('br'));
+      translatedSection.appendChild(span);
+      translatedSection.appendChild(document.createElement('br'));
 
       range.collapse(); 
       range.insertNode(translatedSection);
@@ -298,13 +306,13 @@ function insertTranslation(tabId, translatedText) {
 
 // Listener for the context menu button
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (info.menuItemId !== "cabTranslate") return;
+  if (info.menuItemId !== 'cabTranslate') return;
   if (!info.selectionText) return;
 
   try {
-    const translated = await translateText(info.selectionText, "EN");
+    const translated = await translateText(info.selectionText, 'EN');       // AHHHHHHHHHHHHHHHHHHH
     insertTranslation(tab.id, translated);
   } catch (error) {
-    console.error("Translation failed:", error);
+    console.error('Translation failed:', error);
   }
 });
