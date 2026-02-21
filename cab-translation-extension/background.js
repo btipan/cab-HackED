@@ -282,14 +282,19 @@ function insertTranslation(tabId, translatedText) {
 
       const range = selection.getRangeAt(0);
 
+      // Make sure element is not interactive
+      let inter = range.startContainer.parentElement?.closest('a', 'button', 'label', 'summary', 'textarea', 'input', 'select');
+
       const wrapper = document.createElement('span');
-      wrapper.classname = 'cab-translation-wrapper';
+      wrapper.className = 'cab-translation-wrapper';
       wrapper.appendChild(document.createElement('br'));
 
+      // Build the text
       const span = document.createElement('span');
       span.textContent = text;
       span.className = 'cab-translation-text';
 
+      // Build the undo button with svg for back arrow
       const undoBtn = document.createElement('button');
       undoBtn.className = 'cab-undo-btn';
       undoBtn.innerHTML = `
@@ -300,6 +305,7 @@ function insertTranslation(tabId, translatedText) {
         `;
       undoBtn.title = 'undo translation';
 
+      // Event listener for removal of the entire wrapper
       undoBtn.addEventListener('click', () => {
         wrapper.remove();
       });
@@ -307,8 +313,13 @@ function insertTranslation(tabId, translatedText) {
       wrapper.appendChild(undoBtn);
       wrapper.appendChild(document.createElement('br'));
 
-      range.collapse(); 
-      range.insertNode(wrapper);
+      // If it is interactive, put it immediately after
+      if (inter) {
+        inter.parentNode.insertBefore(wrapper, inter.nextSibling);
+      } else {
+        range.collapse();
+        range.insertNode(wrapper);
+      }
 
       selection.removeAllRanges();
     },
