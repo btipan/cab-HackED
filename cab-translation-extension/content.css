@@ -1,0 +1,21 @@
+
+.cab-translation-text {
+  background-color: #fff3b0;
+  color:black;
+  font-style: italic;
+  font-size: 0.9em;
+  padding: 0.15em;
+  border-radius: 2px;
+}
+
+.cab-undo-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0.6;
+}
+
+.cab-undo-btn:hover {
+  opacity: 1;
+}

@@ -1,62 +1,62 @@
 {
   "manifest_version": 3,
-  "name": "Hover Translator + Sentence Explainer",
+  "name": "Translator + Sentence Explainer",
   "version": "0.1.0",
-  "description": "Hover words and analyze sentences with translation and grammar explanations across websites.",
+  "description": "analyze sentences with translation and grammar explanations across websites.",
   "minimum_chrome_version": "114",
-
   "permissions": [
     "storage",
     "activeTab",
     "scripting",
-    "sidePanel"
+    "sidePanel",
+    "contextMenus"
   ],
-
   "host_permissions": [
     "http://localhost:3000/*",
     "https://localhost:3000/*",
     "https://*/*",
-    "http://*/*"
+    "http://*/*",
+    "https://api-free.deepl.com/*"
   ],
-
   "background": {
     "service_worker": "background.js",
     "type": "module"
   },
-
   "action": {
-    "default_title": "Hover Translator"
+    "default_title": "Hover Translator",
+    "default_popup": "popup.html"
   },
-
   "side_panel": {
     "default_path": "sidepanel.html"
   },
-
   "options_page": "options.html",
-
   "commands": {
     "analyze-selection-or-sentence": {
       "suggested_key": {
-        "default": "Ctrl+Shift",
-        "mac": "Command+Shift"
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
       },
       "description": "Analyze current selection or detected sentence"
     }
   },
-
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "css": ["content.css"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
       "run_at": "document_idle"
     }
   ],
-
   "icons": {
-    "16": "icons/icon16.png",
-    "32": "icons/icon32.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+    "16": "cab.png",
+    "32": "cab.png",
+    "48": "cab.png",
+    "128": "cab.png"
   }
 }

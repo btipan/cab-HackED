@@ -1,20 +1,89 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Cab Translations</title>
+  <meta charset="UTF-8" />
+  <title>Cab Translator</title>
   <style>
     body {
-      width: 200px;
-      height: 200px;
-      padding: 10px;
+      width: 260px;
+      margin: 0;
+      padding: 12px;
+      font-family: Arial, sans-serif;
+      color: #1f2937;
+      background: #f8fafc;
     }
+
     h1 {
-      color: #333;
+      margin: 0 0 10px;
+      font-size: 16px;
     }
+
+    .btn {
+      width: 100%;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    button:hover {
+      translate: -2px;
+    }
+
+    button:active{
+      scale: 98%;
+    }
+
+    .translate {
+      background: #40531B;
+      color: #ffffff;
+    }
+
+    .translate.on {
+      background: #dc2626;
+    }
+
+    .panel {
+      background: #618B4A;
+      color: #ffffff;
+    }
+
+    .third {
+      background: #618B4A;
+      color: #ffffff;
+    }
+
+    .fourth {
+      background: #618B4A;
+      color: #ffffff;
+    }
+
+    #dash-btn {
+      background-color: rgb(20, 20, 20);
+      color: white;
+      width: 100%;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    
   </style>
 </head>
 <body>
-  <h1>Hello, Extensions!</h1>
-  <p>This is a basic HTML popup.</p>
+  <h1>Fake Taxi Simulator</h1>
+  <button id="translateBtn" class="btn translate" type="button">Enable Translation</button>
+  <button id="openPanelBtn" class="btn panel" type="button">Open Side Panel</button>
+  <button id="ThirdBtn" class="btn third" type="button">Button</button>
+  <button id="FourthBtn" class="btn fourth" type="button">Button</button>
+  <button id="dash-btn" class="dash-btn" type="button">Dashboard</button>
+
+  <script src="popup.js"></script>
 </body>
 </html>
