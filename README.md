@@ -13,7 +13,7 @@ This Chrome extension allows users to translate other language text to English. 
 - **Step 2** → A **pop-up** with the translated text.
 - **Step 3** → **Optionally**, access breakdowns of grammar structures and definitions of words via extra tabs on popup.
 
-These features are designed to improve accessibility and ease of use for individuals with ADHD/ADD who need explanations, definitions, and grammar breakdowns all in one place rather than spread out on Google Translate, LLMs, and physical textbooks.
+These features are designed to improve accessibility and ease of use for individuals with **ADHD/ADD** or people with other **learning limitations** who need explanations, definitions, and grammar breakdowns all in one place rather than spread out on Google Translate, LLMs, and physical textbooks.
 
 ### **How to Upload the Extension to Chrome**
 
