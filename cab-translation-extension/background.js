@@ -19,6 +19,23 @@ const DEFAULT_OPTIONS = {
 	debugMode: false
 };
 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+
+  if (message.action === "translateText") {
+    translateText(message.text)
+      .then(result => {
+        sendResponse({ translatedText: result });
+      })
+      .catch(error => {
+        console.error(error);
+        sendResponse({ translatedText: null });
+      });
+
+    return true; // IMPORTANT: keeps service worker alive for async
+  }
+
+});
+
 // Default init conditions on install
 chrome.runtime.onInstalled.addListener(async () => {
   try {
