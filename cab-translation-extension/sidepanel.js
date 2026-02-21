@@ -34,6 +34,8 @@ translateTextBtn.addEventListener("click", async () => {
   const response = await sendRuntimeMessage({ action: "translateText", text });
   const translatedText = String(response?.translatedText || "").trim() || fallbackTranslate(text);
 
+  statusText.style.display = 'Enter text here.';
+
   output.value = translatedText;
 });
 

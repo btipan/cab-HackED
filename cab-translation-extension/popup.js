@@ -5,14 +5,16 @@ const openFourthBtn = document.getElementById("openFourthBtn");
 const dashBtn = document.getElementById("dash-btn");
 const statusText = document.getElementById("status");
 
+function setStatus(message) {
+  if (statusText) statusText.textContent = message;
+}
+
 function setTranslationMode(isEnabled) {
   translateBtn.textContent = isEnabled
     ? "Disable Translation"
     : "Enable Translation";
   translateBtn.classList.toggle("on", isEnabled);
-  statusText.textContent = isEnabled
-    ? "Translation is ON."
-    : "Translation is OFF.";
+  setStatus(isEnabled ? "Translation is ON." : "Translation is OFF.");
 }
 
 function getActiveTab() {
@@ -48,11 +50,13 @@ async function refreshState() {
   }
 }
 
+if (translateBtn) {
 translateBtn.addEventListener("click", async () => {
   const activeTab = await getActiveTab();
   if (!activeTab?.id) {
     return;
   }
+
 
   try {
     const current = await sendToTab(activeTab.id, { action: "getSelectionTranslationState" });
@@ -67,12 +71,15 @@ translateBtn.addEventListener("click", async () => {
   } catch (_error) {
   }
 });
+}
 
+if (openPanelBtn) {
 openPanelBtn.addEventListener("click", async () => {
   const activeTab = await getActiveTab();
   if (!activeTab?.windowId || !activeTab?.id) {
     return;
   }
+
 
   try {
     await chrome.sidePanel.setOptions({
@@ -84,6 +91,7 @@ openPanelBtn.addEventListener("click", async () => {
   } catch (_error) {
   }
 });
+}
 
 // quickThirdBtn.addEventListener("click", () => {return});
 // openFourthBtn.addEventListener("click", () => {return});

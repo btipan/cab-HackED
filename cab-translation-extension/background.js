@@ -23,6 +23,46 @@ const DEF_KEY = 'EhZY1LIjvO0gFNHY7QskYeedly4Ni9SNeFbytspOjNqoPAoxHOQQJQQJ99CBACB
 const DEF_ENDPOINT = 'https://api.cognitive.microsofttranslator.com';
 const DEF_REGION = 'canadacentral';
 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+
+  if (message.action === "translateText") {
+    translateText(message.text)
+      .then(result => {
+        sendResponse({ translatedText: result });
+      })
+      .catch(error => {
+        console.error(error);
+        sendResponse({ translatedText: null });
+      });
+    
+    return true;
+  }
+
+  if (message.action === "addFlashcard") {
+    addFlashcard(message.original, message.translation)
+      .then(() => sendResponse({ success: true }))
+      .catch(error => {
+        console.error(error);
+        sendResponse({ success: false });
+      });
+
+    return true;
+  }
+
+});
+
+async function addFlashcard(original, translation) {
+  const newCard = {
+    id: original,
+    translation
+  }
+
+  const data = await chrome.storage.local.get({flashcards: []});
+
+  const updatedFlashcards = [...data.flashcards, newCard];
+  await chrome.storage.local.set({flashcards: updatedFlashcards});
+}
+
 // Default init conditions on install
 chrome.runtime.onInstalled.addListener(async () => {
   try {

@@ -6,62 +6,6 @@ let selectionUpdateTimer = null;
 let selectionTranslationEnabled = true;
 const FALLBACK_PREFIX = "[Translated] ";
 
-function sendToBackground(message) {
-  return new Promise((resolve) => {
-    chrome.runtime.sendMessage(message, (response) => {
-      if (chrome.runtime.lastError) {
-        resolve(null);
-        return;
-      }
-      resolve(response || null);
-    });
-  });
-}
-
-function fallbackTranslateText(text) {
-  const clean = String(text || "").trim();
-  return clean ? `${FALLBACK_PREFIX}${clean}` : "";
-}
-
-async function translateTextWithFallback(text) {
-  const response = await sendToBackground({ action: "translateText", text });
-  const translatedText = String(response?.translatedText || "").trim();
-  return translatedText || fallbackTranslateText(text);
-}
-
-async function translateSelectionImmediately() {
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-    return false;
-  }
-
-  const range = selection.getRangeAt(0);
-  const text = range.toString().trim();
-  if (!text) {
-    return false;
-  }
-
-  const translatedText = await translateTextWithFallback(text);
-  if (!translatedText) {
-    return false;
-  }
-
-  range.deleteContents();
-  range.insertNode(document.createTextNode(translatedText));
-  selection.removeAllRanges();
-  hideSelectionPopup();
-  return true;
-}
-
-function hideSelectionPopup() {
-  if (!selectionPopup) {
-    return;
-  }
-
-  selectionPopup.style.display = "none";
-  selectedRange = null;
-}
-
 function createSelectionPopup() {
   if (selectionPopup) {
     return;
@@ -197,6 +141,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.action === "getSelectionTranslationState") {
     sendResponse({ enabled: selectionTranslationEnabled });
     return;
+  }
+  else if (message?.type === "GET_SELECTED_TEXT") {
+  const selection = window.getSelection();
+  const text = selection ? selection.toString().trim() : "";
+  sendResponse({ text, source: "selection" });
+  return;
   }
 
   if (message?.action === "setSelectionTranslationEnabled") {
