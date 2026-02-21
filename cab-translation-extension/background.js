@@ -240,6 +240,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 const DEEPL_KEY = "433a6554-ee2e-447e-abc5-a67011a18cb3:fx";        // WE WILL NEED TO REMOVE THIS probably
 
+// Context menu button 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "cabTranslate",
@@ -248,53 +249,62 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-// Using a context menu, will change later probably
+// Translate text using an async call to DeepL API and return the translated text
+async function translateText(text, targetLang = "EN") {
+  const response = await fetch("https://api-free.deepl.com/v2/translate", {
+    method: "POST",
+    headers: {
+      "Authorization": `DeepL-Auth-Key ${DEEPL_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      text: [text],
+      target_lang: targetLang
+    })
+  });
+
+  const data = await response.json();
+
+  if (!data.translations || !data.translations.length) {
+    throw new Error("No translation returned");
+  }
+
+  return data.translations[0].text;
+}
+
+// Insert the translated line with a line break before and after
+function insertTranslation(tabId, translatedText) {
+  chrome.scripting.executeScript({
+    target: { tabId },
+    func: (text) => {
+      const selection = window.getSelection();
+      if (!selection.rangeCount) return;
+
+      const range = selection.getRangeAt(0);
+
+      const translatedSection = document.createDocumentFragment();
+      translatedSection.appendChild(document.createElement("br"));
+      translatedSection.appendChild(document.createTextNode(text));
+      translatedSection.appendChild(document.createElement("br"));
+
+      range.collapse(); 
+      range.insertNode(translatedSection);
+
+      selection.removeAllRanges();
+    },
+    args: [translatedText]
+  });
+}
+
+// Listener for the context menu button
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId !== "cabTranslate") return;
-
-  const selectedText = info.selectionText;
-
-  if (!selectedText) return;
+  if (!info.selectionText) return;
 
   try {
-    const response = await fetch("https://api-free.deepl.com/v2/translate", {
-      method: "POST",
-      headers: {
-        "Authorization": `DeepL-Auth-Key ${DEEPL_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        text: [selectedText],
-        target_lang: "EN"                   // CHANGE TO DO A ANY LANG
-      })
-    });
-
-    const data = await response.json();
-    const translated = data.translations[0].text;
-
-    chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: (translatedText) => {
-        const selection = window.getSelection();
-        if (!selection.rangeCount) return;
-
-        const range = selection.getRangeAt(0);
-
-        // Create a the translated text element to insert
-        const translation = document.createDocumentFragment();
-        translation.appendChild(document.createElement("br"));
-        translation.appendChild(document.createTextNode(translatedText));
-        translation.appendChild(document.createElement("br"));
-
-        range.collapse();
-        range.insertNode(translation);
-
-        selection.removeAllRanges();
-      },
-      args: [translated]
-    });
-
+    const translated = await translateText(info.selectionText, "EN");
+    insertTranslation(tab.id, translated);
   } catch (error) {
-    console.error(error);
+    console.error("Translation failed:", error);
   }
 });
