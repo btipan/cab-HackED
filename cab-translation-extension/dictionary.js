@@ -3,16 +3,16 @@ require('dotenv').config();
 const axios = require('axios').default;
 const { v4: uuidv4 } = require('uuid');
 
-const key = env.TRANSLATOR_KEY;
-const endpoint = env.TRANSLATOR_REGION;
-const location = "canadacentral";
+const key = process.env.TRANSLATOR_KEY;
+const endpoint = "https://api.cognitive.microsofttranslator.com";
+const location = process.env.TRANSLATOR_REGION;
 
 const sourceWord = "タクシー";
 const sourceLang = 'ja'
 
-async function getTranslationAndExample(word) {
+async function getTranslationAndExample(word, sourceLang) {
     try {
-        // Dictionary lookup (non-english -> English)
+        // Dictionary lookup
         const lookupResp = await axios({
             baseURL: endpoint,
             url: '/dictionary/lookup',
@@ -34,7 +34,7 @@ async function getTranslationAndExample(word) {
 
         const translations = lookupResp.data[0].translations;
 
-        // For each English translation, get one example sentence
+        // For each translation, get one example sentence
         for (let t of translations) {
             const engWord = t.normalizedTarget;
 
@@ -79,4 +79,4 @@ async function getTranslationAndExample(word) {
     }
 }
 
-getTranslationAndExample(sourceWord);
+getTranslationAndExample(sourceWord, sourceLang);
