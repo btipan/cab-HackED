@@ -1,7 +1,9 @@
 const textInput = document.getElementById("textInput");
 const output = document.getElementById("output");
+const definition = document.getElementById("definition");
 const statusText = document.getElementById("status");
 const translateTextBtn = document.getElementById("translateTextBtn");
+const definitionBtn = document.getElementById("definitionBtn");
 
 function fallbackTranslate(text) {
   const clean = String(text || "").trim();
@@ -33,4 +35,22 @@ translateTextBtn.addEventListener("click", async () => {
   const translatedText = String(response?.translatedText || "").trim() || fallbackTranslate(text);
 
   output.value = translatedText;
+});
+
+// Definition button
+definitionBtn.addEventListener("click", async () => {
+    const word = textInput.value.trim();
+
+    const result = await sendRuntimeMessage({
+        type: "GET_DEFINITION",
+        word,
+        from: "en",
+        to: "ja"
+    });
+
+    if (!result || !result.translations) {
+        definition.value = "No definition found.";
+    } else {
+        definition.value = JSON.stringify(result, null, 2);
+    }
 });

@@ -16,7 +16,8 @@
     "https://localhost:3000/*",
     "https://*/*",
     "http://*/*",
-    "https://api-free.deepl.com/*"
+    "https://api-free.deepl.com/*",
+    "https://api.cognitive.microsoft.com/*" 
   ],
   "background": {
     "service_worker": "background.js",

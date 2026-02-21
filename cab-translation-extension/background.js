@@ -19,6 +19,10 @@ const DEFAULT_OPTIONS = {
 	debugMode: false
 };
 
+const DEF_KEY = 'EhZY1LIjvO0gFNHY7QskYeedly4Ni9SNeFbytspOjNqoPAoxHOQQJQQJ99CBACBsN54XJ3w3AAAbACOGPo7x';
+const DEF_ENDPOINT = 'https://api.cognitive.microsofttranslator.com';
+const DEF_REGION = 'canadacentral';
+
 // Default init conditions on install
 chrome.runtime.onInstalled.addListener(async () => {
   try {
@@ -224,6 +228,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         break;
       }
 
+      case "GET_DEFINITION": {
+        const { word, from, to } = message;
+        try {
+          const result = await getTranslationAndExample(word, from, to);
+          sendResponse(result);
+        } catch (err) {
+          sendResponse({ error: err.message });
+        }
+        break;
+      }
+
       default:
         // Unknown message type
         sendResponse({ ok: false, error: "Unknown message type." });
@@ -339,3 +354,92 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     console.error('Translation failed:', error);
   }
 });
+
+async function getTranslationAndExample(word, from, to) {
+    try {
+        // Helper: generate a random trace ID (needed so we dont have to import uuid)
+        function generateTraceId() {
+            return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+        }
+
+        // Dictionary lookup
+        const lookupUrl = `${DEF_ENDPOINT}/dictionary/lookup?api-version=3.0&from=${from}&to=${to}`;
+        const lookupResp = await fetch(lookupUrl, {
+            method: 'POST',
+            headers: {
+                'Ocp-Apim-Subscription-Key': DEF_KEY,
+                'Ocp-Apim-Subscription-Region': DEF_REGION,
+                'Content-Type': 'application/json',
+                'X-ClientTraceId': generateTraceId()
+            },
+            body: JSON.stringify([{ text: word }])
+        });
+
+        if (!lookupResp.ok) {
+            throw new Error(`Dictionary lookup failed: ${lookupResp.status} ${lookupResp.statusText}`);
+        }
+
+        const entries = await lookupResp.json();
+        const results = [];
+
+        for (const entry of entries) {
+            for (const t of entry.translations) {
+                const targetWord = t.normalizedTarget;
+                const posTag = t.posTag || null;
+
+                // Back translation
+                const backTranslations = (t.backTranslations || [])
+                    .map(bt => bt.normalizedText)
+                    .filter(btWord => btWord !== targetWord);
+
+                // Examples
+                let sourceExample = null;
+                let targetExample = null;
+
+                if (targetWord) {
+                    const exampleUrl = `${DEF_ENDPOINT}/dictionary/examples?api-version=3.0&from=${to}&to=${from}`;
+                    const exampleResp = await fetch(exampleUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Ocp-Apim-Subscription-Key': DEF_KEY,
+                            'Ocp-Apim-Subscription-Region': DEF_REGION,
+                            'Content-Type': 'application/json',
+                            'X-ClientTraceId': generateTraceId()
+                        },
+                        body: JSON.stringify([{ text: targetWord, translation: word }])
+                    });
+
+                    if (!exampleResp.ok) {
+                        console.warn(`Example lookup failed for ${targetWord}: ${exampleResp.status}`);
+                    } else {
+                        const exampleData = await exampleResp.json();
+                        const examples = exampleData?.[0]?.examples || [];
+                        if (examples.length > 0) {
+                            const ex = examples[0];
+                            targetExample = `${ex.sourcePrefix}${ex.sourceTerm}${ex.sourceSuffix}`;
+                            sourceExample = `${ex.targetPrefix}${ex.targetTerm}${ex.targetSuffix}`;
+                        }
+                    }
+                }
+
+                results.push({
+                    translation: targetWord,
+                    posTag,
+                    backTranslations,
+                    sourceExample,
+                    targetExample
+                });
+            }
+        }
+
+        return {
+          sourceWord: word, 
+          sourceLang: from, 
+          targetLang: to, 
+          translations: results.length > 0 ? results : null 
+        };
+
+    } catch (err) {
+        return { error: err.message || 'Unknown error' };
+    }
+}
