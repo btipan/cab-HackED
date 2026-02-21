@@ -1,6 +1,90 @@
-/*
-popup.js needs to:
-	•	test UI buttons
-	•	show extension status
-	•	maybe add “read current selection” button (backup to KB shortcut)
-*/
+const translateBtn = document.getElementById("translateBtn");
+const openPanelBtn = document.getElementById("openPanelBtn");
+const quickThirdBtn = document.getElementById("openThirdBtn");
+const openFourthBtn = document.getElementById("openFourthBtn");
+const statusText = document.getElementById("status");
+
+function setTranslationMode(isEnabled) {
+  translateBtn.textContent = isEnabled
+    ? "Disable Translation"
+    : "Enable Translation";
+  translateBtn.classList.toggle("on", isEnabled);
+  statusText.textContent = isEnabled
+    ? "Translation is ON."
+    : "Translation is OFF.";
+}
+
+function getActiveTab() {
+  return new Promise((resolve) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      resolve(tabs?.[0] ?? null);
+    });
+  });
+}
+
+function sendToTab(tabId, message) {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.sendMessage(tabId, message, (response) => {
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+        return;
+      }
+      resolve(response || {});
+    });
+  });
+}
+
+async function refreshState() {
+  const activeTab = await getActiveTab();
+  if (!activeTab?.id) {
+    return;
+  }
+
+  try {
+    const response = await sendToTab(activeTab.id, { action: "getSelectionTranslationState" });
+    setTranslationMode(Boolean(response?.enabled));
+  } catch (_error) {
+  }
+}
+
+translateBtn.addEventListener("click", async () => {
+  const activeTab = await getActiveTab();
+  if (!activeTab?.id) {
+    return;
+  }
+
+  try {
+    const current = await sendToTab(activeTab.id, { action: "getSelectionTranslationState" });
+    const nextEnabled = !Boolean(current?.enabled);
+
+    const response = await sendToTab(activeTab.id, {
+      action: "setSelectionTranslationEnabled",
+      enabled: nextEnabled,
+    });
+
+    setTranslationMode(Boolean(response?.enabled));
+  } catch (_error) {
+  }
+});
+
+openPanelBtn.addEventListener("click", async () => {
+  const activeTab = await getActiveTab();
+  if (!activeTab?.windowId || !activeTab?.id) {
+    return;
+  }
+
+  try {
+    await chrome.sidePanel.setOptions({
+      tabId: activeTab.id,
+      path: "sidepanel.html",
+      enabled: true,
+    });
+    await chrome.sidePanel.open({ windowId: activeTab.windowId });
+  } catch (_error) {
+  }
+});
+
+openThirdBtn.addEventListener("click", () => {});
+openFourthBtn.addEventListener("click", () => {});
+
+refreshState();
