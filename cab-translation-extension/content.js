@@ -198,6 +198,13 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     sendResponse({ enabled: selectionTranslationEnabled });
     return;
   }
+  else if { (message?.type === "GET_SELECTED_TEXT") {
+  const selection = window.getSelection();
+  const text = selection ? selection.toString().trim() : "";
+  sendResponse({ text, source: "selection" });
+  return;
+  }
+          }
 
   if (message?.action === "setSelectionTranslationEnabled") {
     selectionTranslationEnabled = Boolean(message.enabled);
