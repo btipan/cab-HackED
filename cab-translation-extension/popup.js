@@ -55,8 +55,8 @@ translateBtn.addEventListener("click", async () => {
   const activeTab = await getActiveTab();
   if (!activeTab?.id) {
     return;
-  });
-}
+  }
+
 
   try {
     const current = await sendToTab(activeTab.id, { action: "getSelectionTranslationState" });
@@ -71,14 +71,15 @@ translateBtn.addEventListener("click", async () => {
   } catch (_error) {
   }
 });
+}
 
 if (openPanelBtn) {
 openPanelBtn.addEventListener("click", async () => {
   const activeTab = await getActiveTab();
   if (!activeTab?.windowId || !activeTab?.id) {
     return;
-  });
-}
+  }
+
 
   try {
     await chrome.sidePanel.setOptions({
@@ -90,6 +91,7 @@ openPanelBtn.addEventListener("click", async () => {
   } catch (_error) {
   }
 });
+}
 
 // quickThirdBtn.addEventListener("click", () => {return});
 // openFourthBtn.addEventListener("click", () => {return});
