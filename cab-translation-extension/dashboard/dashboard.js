@@ -139,3 +139,6 @@ document.addEventListener("DOMContentLoaded", () => {
   showView("history");
   loadHistory().catch(console.error);
 });
+
+document.getElementById("settings-btn").onclick = () => {
+  window.location.href = "../options.html"};
