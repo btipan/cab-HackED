@@ -4,8 +4,8 @@ const STORAGE_KEY = "translatorOptions";
 
 const DEFAULT_OPTIONS = {
   // apiBaseUrl: "http://localhost:3000",
-  sourceLang: "EN",
-  targetLang: "jp",
+  sourceLang: "JA",
+  targetLang: "EN-US",
   // explanationStyle: "concise",
   // youtubeFallback: true,
   // debugMode: false
