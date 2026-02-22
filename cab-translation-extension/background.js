@@ -639,13 +639,7 @@ async function getExplanation(text, targetLang, sourceLang) {
 
   const langs = await getLangs();
 
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${EXPLAIN_KEY}`,
-    },
-    body: JSON.stringify({
+  const bodys = JSON.stringify({
       model: "gpt-5-nano",
       instructions: `You are a multilingual language agent embedded in an extension.
       When given a phrase or sentence in any language, you must:
@@ -660,8 +654,13 @@ async function getExplanation(text, targetLang, sourceLang) {
 
       reasoning: {effort: "low"},
       text: {verbosity: "low"}
-    }),
-  });
+    });
+
+  const response = await fetch("https://cab-hacked.onrender.com/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: bodys
+    });
 
   if (!response.ok) {
     const errorText = await response.text();
