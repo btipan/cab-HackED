@@ -395,11 +395,16 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   }
 });
 
-async function getTranslationAndExample(word, from, to) {
+async function getTranslationAndExample(word, from='auto', to) {
     try {
         // Helper: generate a random trace ID (needed so we dont have to import uuid)
         function generateTraceId() {
             return Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+        }
+
+         // detect language if 'from' is auto
+        if (from === "auto") {
+            from = await detectLanguage(word);
         }
 
         // Dictionary lookup
@@ -481,5 +486,40 @@ async function getTranslationAndExample(word, from, to) {
 
     } catch (err) {
         return { error: err.message || 'Unknown error' };
+    }
+}
+
+async function detectLanguage(text) {
+    try {
+        // Helper: generate a random trace ID
+        function generateTraceId() {
+            return Array.from({ length: 32 }, () =>
+                Math.floor(Math.random() * 16).toString(16)
+            ).join('');
+        }
+
+        // Detect language via Microsoft Translator API
+        const detectUrl = `${DEF_ENDPOINT}/detect?api-version=3.0`;
+        const resp = await fetch(detectUrl, {
+            method: 'POST',
+            headers: {
+                'Ocp-Apim-Subscription-Key': DEF_KEY,
+                'Ocp-Apim-Subscription-Region': DEF_REGION,
+                'Content-Type': 'application/json',
+                'X-ClientTraceId': generateTraceId()
+            },
+            body: JSON.stringify([{ text }])
+        });
+
+        if (!resp.ok) {
+            throw new Error(`Language detection failed: ${resp.status} ${resp.statusText}`);
+        }
+
+        const data = await resp.json();
+        return data?.[0]?.language || 'en'; // fallback to English if detection fails
+
+    } catch (err) {
+        console.error("detectLanguage error:", err);
+        return 'en'; // fallback to English on error
     }
 }

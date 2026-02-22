@@ -42,12 +42,15 @@ translateTextBtn.addEventListener("click", async () => {
 // Definition button
 definitionBtn.addEventListener("click", async () => {
     const word = textInput.value.trim();
+    // TODO: fix hardcoded languages (use chrome.storage)
+    const sourceLang = 'auto'
+    const targetLang = 'en'
 
     const result = await sendRuntimeMessage({
         type: "GET_DEFINITION",
         word,
-        from: "en",
-        to: "ja"
+        from: sourceLang,
+        to: targetLang
     });
 
     if (!result || !result.translations) {
