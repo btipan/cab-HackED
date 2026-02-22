@@ -42,9 +42,14 @@ translateTextBtn.addEventListener("click", async () => {
 // Definition button
 definitionBtn.addEventListener("click", async () => {
     const word = textInput.value.trim();
-    // TODO: fix hardcoded languages (use chrome.storage)
-    const sourceLang = 'auto'
-    const targetLang = 'en'
+    if (!word) {
+        definition.innerHTML = "<em>Enter a word.</em>";
+        return;
+    }
+
+    // TODO: use chrome.storage to get saved source/target languages
+    const sourceLang = "auto";
+    const targetLang = "en";
 
     const result = await sendRuntimeMessage({
         type: "GET_DEFINITION",
@@ -54,8 +59,33 @@ definitionBtn.addEventListener("click", async () => {
     });
 
     if (!result || !result.translations) {
-        definition.value = "No definition found.";
-    } else {
-        definition.value = JSON.stringify(result, null, 2);
+        definition.innerHTML = "<strong>No definition found.</strong>";
+        return;
     }
+
+    // Format nicely with HTML
+    let html = '';
+    result.translations.forEach((t, idx) => {
+        html += '<div style="margin-bottom:12px;">';
+        
+        // Word + POS
+        html += `<span style="font-size:16px;">${t.translation || "N/A"}</span> `;
+        html += `<span style="font-size:14px; color:#555;">(${t.posTag || "N/A"})</span><br>`;
+        
+        // synonyms
+        if (t.backTranslations && t.backTranslations.length) {
+            html += `&nbsp;&nbsp;<strong>Synonyms:</strong> ${t.backTranslations.join(", ")}<br>`;
+        }
+        
+        // Examples
+        if (t.sourceExample && t.targetExample) {
+            html += `&nbsp;&nbsp;<strong>Example:</strong><br>`;
+            html += `&nbsp;&nbsp;&nbsp;&nbsp;<em>${result.sourceLang}:</em> ${t.sourceExample}<br>`;
+            html += `&nbsp;&nbsp;&nbsp;&nbsp;<em>${result.targetLang}:</em> ${t.targetExample}<br>`;
+        }
+        
+        html += `</div>`;
+    });
+
+    definition.innerHTML = html;
 });
