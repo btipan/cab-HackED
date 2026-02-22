@@ -36,6 +36,29 @@ async function addFlashcard(original, translation) {
   await chrome.storage.local.set({flashcards: updatedFlashcards});
 }
 
+// Adding translation history to access recent translation requests for user
+async function addTranslationHistoryEntry(entry) {
+  const data = await chrome.storage.local.get({ translationHistory: [] });
+
+  const newEntry = {
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random(),
+    original: String(entry.original || "").trim(),
+    translatedText: String(entry.translatedText || "").trim(),
+    sourceLang: entry.sourceLang || "auto",
+    targetLang: entry.targetLang || "EN",
+    trigger: entry.trigger || "unknown",
+    timestamp: entry.timestamp || Date.now()
+  };
+
+  // Ignore empty / bad entries
+  if (!newEntry.original || !newEntry.translatedText) return;
+
+  // Newest first, keep only recent 30 (or keep more if you want)
+  const updated = [newEntry, ...data.translationHistory].slice(0, 30);
+
+  await chrome.storage.local.set({ translationHistory: updated });
+}
+
 // Default init conditions on install
 chrome.runtime.onInstalled.addListener(async () => {
   try {
@@ -137,6 +160,7 @@ async function handleAnalyzeTrigger(trigger = "unknown") {
 
       return;
     }
+  
 
     const result = await requestSelectedTextFromTab(tab.id);
 
@@ -252,16 +276,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         break;
       }
 
-      case "TRANSLATE_TEXT": {
-        translateText(message.text)
-          .then(result => {
-            sendResponse({ translatedText: result });
-          })
-          .catch(error => {
-            console.error(error);
-            sendResponse({ translatedText: null });
-          });
-          break;
+	
+    	case "TRANSLATE_TEXT": {
+		translateText(message.text, message.targetLang || "EN")
+    	.then(async (result) => {
+      	try {
+	        await addTranslationHistoryEntry({
+	          original: message.text,
+	          translatedText: result,
+	          sourceLang: message.sourceLang || "auto",
+	          targetLang: message.targetLang || "EN",
+	          trigger: message.trigger || "runtime"
+	        });
+	      } catch (historyErr) {
+	        console.warn("[background] Failed to save translation history:", historyErr);
+		}
+
+      sendResponse({ translatedText: result });
+    })
+    .catch(error => {
+      console.error(error);
+      sendResponse({ translatedText: null });
+    });
+  break;
+}
       }
 
       case "GET_EXPLANATION": {
@@ -287,16 +325,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
 
       case "TRANSLATE_POPUP": {
-          translateText(message.text)
-          .then(result => {
-            sendResponse({ translatedText: result });
-          })
-          .catch(error => {
-            console.error(error);
-            sendResponse({ translatedText: null });
-          });
-          break;
-      }
+  		translateText(message.text, message.targetLang || "EN")
+    	.then(async (result) => {
+	      try {
+	        await addTranslationHistoryEntry({
+	          original: message.text,
+	          translatedText: result,
+	          sourceLang: message.sourceLang || "auto",
+	          targetLang: message.targetLang || "EN",
+	          trigger: "popup"
+	        });
+	      } catch (historyErr) {
+	        console.warn("[background] Failed to save translation history:", historyErr);
+		  }
+
+      sendResponse({ translatedText: result });
+    })
+    .catch(error => {
+      console.error(error);
+      sendResponse({ translatedText: null });
+    });
+  break;
+}
 
       default:
         // Unknown message type
@@ -312,7 +362,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
-const DEEPL_KEY = '433a6554-ee2e-447e-abc5-a67011a18cb3:fx';        // WE WILL NEED TO REMOVE THIS probably
+const DEEPL_KEY = '433a6554-ee2e-447e-abc5-a67011a18cb3:fx';        // WE WILL NEED TO REMOVE THIS probably definitely
 
 // Context menu button 
 chrome.runtime.onInstalled.addListener(() => {
