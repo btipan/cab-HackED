@@ -168,3 +168,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 // targetDropdown.addEventListener('change', () => {
 //   chrome.storage.sync.set({ targetLanguage: targetDropdown.value });
 // });
+
+
+document.getElementById("backbutton").onclick = () => {
+  window.location.href = "./dashboard/dashboard.html";};
