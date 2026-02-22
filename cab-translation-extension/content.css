@@ -1,3 +1,45 @@
+.cab-translation-selection-popup {
+  position: fixed;
+  z-index: 2147483647;
+  display: none;
+  background: #ffffff;
+  color: #ffffff;
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+}
+
+.cab-translation-button {
+  background: #618B4A;
+  color: #ffffff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.popupbase {
+  position: fixed;
+  z-index: 10000;
+  display: none;
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 8px;
+  padding: 10px;
+  width: 17rem;
+  height: 8rem;
+  box-sizing: border-box;
+  overflow: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.side-panel-button {
+  position: relative;
+
+}
 
 .cab-translation-text {
   background-color: #fff3b0;
