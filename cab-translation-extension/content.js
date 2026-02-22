@@ -5,6 +5,17 @@ let selectionUpdateTimer = null;
 let selectionTranslationEnabled = true;
 const FALLBACK_PREFIX = "[Translated] ";
 
+// const STORAGE_KEYS = {
+// 	options:"translatorOptions",
+// 	latestRequest:"latestAnalyzeRequest"
+// };
+
+// async function getLangs() {
+//   const result = await chrome.storage.local.get(STORAGE_KEYS.options);
+//   const options = result[STORAGE_KEYS.options];
+//   return options.targetLang, options.sourceLang;
+// }
+
 function sendRuntimeMessage(message) {
   return new Promise((resolve) => {
     chrome.runtime.sendMessage(message, (response) => {
@@ -43,6 +54,10 @@ function createSelectionPopup() {
       hideSelectionPopup();
       return;
     }
+
+    const stuff = await chrome.storage.local.get("translatorOptions");
+    const options = stuff["translatorOptions"];
+    console.log(options.targetLang);
 
     const text = selectedRange.toString().trim();
     if (!text) {

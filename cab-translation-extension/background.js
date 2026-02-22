@@ -23,6 +23,16 @@ const DEF_KEY = 'EhZY1LIjvO0gFNHY7QskYeedly4Ni9SNeFbytspOjNqoPAoxHOQQJQQJ99CBACB
 const DEF_ENDPOINT = 'https://api.cognitive.microsofttranslator.com';
 const DEF_REGION = 'canadacentral';
 const EXPLAIN_KEY = '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';
+const STORAGE_KEY = 'translatorOptions';
+
+async function getLangs() {
+  const result = await chrome.storage.local.get(STORAGE_KEYS.options);
+  const options = result[STORAGE_KEYS.options];
+  return {
+    sourceLang: options.sourceLang,
+    targetLang: options.targetLang
+  };
+}
 
 async function addFlashcard(original, translation) {
   const newCard = {
@@ -287,7 +297,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	          translatedText: result,
 	          sourceLang: message.sourceLang || "auto",
 	          targetLang: message.targetLang || "EN",
-	          trigger: message.trigger || "runtime"
+	          trigger: message.trigger || "inline"
 	        });
 	      } catch (historyErr) {
 	        console.warn("[background] Failed to save translation history:", historyErr);
@@ -375,7 +385,10 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 // Translate text using an async call to DeepL API and return the translated text
-async function translateText(text, targetLang = 'EN') {
+async function translateText(text) {
+
+  const {targetLang} = await getLangs();
+
   const response = await fetch('https://api-free.deepl.com/v2/translate', {
     method: 'POST',
     headers: {
@@ -476,6 +489,9 @@ async function getTranslationAndExample(word, from='auto', to) {
         if (from === "auto") {
             from = await detectLanguage(word);
         }
+
+        const langs = await getLangs();
+        to = langs.targetLang;
 
         // Dictionary lookup
         const lookupUrl = `${DEF_ENDPOINT}/dictionary/lookup?api-version=3.0&from=${from}&to=${to}`;
@@ -595,6 +611,9 @@ async function detectLanguage(text) {
 }
 
 async function getExplanation(text, targetLang, sourceLang) {
+
+  const langs = await getLangs();
+
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
@@ -612,7 +631,7 @@ async function getExplanation(text, targetLang, sourceLang) {
       Be accurate and pedagogical.
       Be concise.
       A translation of the text is not needed nor is any followup comments`,
-      input: `Explain this ${sourceLang} phrase in ${targetLang}:\n\n"${text}"`,
+      input: `Explain this ${langs.sourceLang} phrase in ${langs.targetLang}:\n\n"${text}"`,
 
       reasoning: {effort: "low"},
       text: {verbosity: "low"}

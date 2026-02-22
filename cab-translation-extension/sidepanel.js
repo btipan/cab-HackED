@@ -133,10 +133,3 @@ explainBtn.addEventListener('click', async () => {
 
   explain.value = result || "Error getting explanation.";
 });
-
-
-
-    // div = document.createElement('div');
-    // div.style.marginBottom = "12px";
-    // div.appendChild(document.createElement(`<span style="font-size:16px;">${t.translation || "N/A"}</span> `));
-    // div.appendChild(document.createElement(`<span style="font-size:14px; color:#555;">(${t.posTag || "N/A"})</span><br>`));
