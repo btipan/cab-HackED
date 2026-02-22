@@ -286,6 +286,18 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           break;
       }
 
+      case "TRANSLATE_POPUP": {
+          translateText(message.text)
+          .then(result => {
+            sendResponse({ translatedText: result });
+          })
+          .catch(error => {
+            console.error(error);
+            sendResponse({ translatedText: null });
+          });
+          break;
+      }
+
       default:
         // Unknown message type
         sendResponse({ ok: false, error: "Unknown message type." });

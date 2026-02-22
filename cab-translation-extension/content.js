@@ -5,6 +5,18 @@ let selectionUpdateTimer = null;
 let selectionTranslationEnabled = true;
 const FALLBACK_PREFIX = "[Translated] ";
 
+function sendRuntimeMessage(message) {
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage(message, (response) => {
+      if (chrome.runtime.lastError) {
+        resolve(null);
+        return;
+      }
+      resolve(response || null);
+    });
+  });
+}
+
 function createSelectionPopup() {
   if (selectionPopup) {
     return;
@@ -40,9 +52,14 @@ function createSelectionPopup() {
 
     translateBtn.disabled = true;
     translateBtn.textContent = "Translating...";
-    
+
+    const response = await sendRuntimeMessage({ type: "TRANSLATE_POPUP", text});
+    const translatedText = String(response?.translatedText || "").trim() || FALLBACK_PREFIX;
+
+    showPopup(translatedText);
+
     // Placeholder - just show the selected text in the popup for now
-    showPopup(text);
+    //showPopup(text);
     
     translateBtn.disabled = false;
     translateBtn.textContent = "Translate";
