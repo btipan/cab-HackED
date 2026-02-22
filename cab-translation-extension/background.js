@@ -290,17 +290,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	        });
 	      } catch (historyErr) {
 	        console.warn("[background] Failed to save translation history:", historyErr);
-		}
+          }
 
-      sendResponse({ translatedText: result });
-    })
-    .catch(error => {
-      console.error(error);
-      sendResponse({ translatedText: null });
-    });
-  break;
-}
+            sendResponse({ translatedText: result });
+          })
+          .catch(error => {
+            console.error(error);
+            sendResponse({ translatedText: null });
+          });
+        break;
       }
+      
 
       case "GET_EXPLANATION": {
         getExplanation(message.text, message.sourceLang, message.targetLang)

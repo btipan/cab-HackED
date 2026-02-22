@@ -1,12 +1,28 @@
+// Navigation buttons
+document.querySelectorAll('.nav-buttons button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const viewId = btn.getAttribute('data-view');
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+  });
+});
+
+// Grab elements per view
 const textInput = document.getElementById("textInput");
 const output = document.getElementById("output");
-const definition = document.getElementById("definition");
-const statusText = document.getElementById("status");
 const translateTextBtn = document.getElementById("translateTextBtn");
+
+const textInputDef = document.getElementById("textInputDef");
+const definition = document.getElementById("definition");
 const definitionBtn = document.getElementById("definitionBtn");
+
+const textInputExp = document.getElementById("textInputExp");
+const explain = document.getElementById("explain");
 const explainBtn = document.getElementById("explainBtn");
 const sourceLangIn = document.getElementById("source");
 const targetLangIn = document.getElementById("target");
+
+const statusText = document.getElementById("status");
 
 function fallbackTranslate(text) {
   const clean = String(text || "").trim();
@@ -25,6 +41,7 @@ function sendRuntimeMessage(message) {
   });
 }
 
+// Translate
 translateTextBtn.addEventListener("click", async () => {
   const text = textInput.value.trim();
   if (!text) {
@@ -33,80 +50,60 @@ translateTextBtn.addEventListener("click", async () => {
   }
 
   statusText.textContent = "Translating...";
-
   const response = await sendRuntimeMessage({ type: "TRANSLATE_TEXT", text });
-  const translatedText = String(response?.translatedText || "").trim() || fallbackTranslate(text);
-
-  statusText.style.display = 'Enter text here.';
-
-  output.value = translatedText;
+  output.value = String(response?.translatedText || fallbackTranslate(text));
+  statusText.textContent = "Done.";
 });
 
-// Definition button
+// Definition
 definitionBtn.addEventListener("click", async () => {
-    const word = textInput.value.trim();
-    if (!word) {
-        definition.innerHTML = "<em>Enter a word.</em>";
-        return;
+  const word = textInputDef.value.trim();
+  if (!word) {
+    definition.innerHTML = "<em>Enter a word.</em>";
+    return;
+  }
+
+  const result = await sendRuntimeMessage({
+    type: "GET_DEFINITION",
+    word,
+    from: "auto",
+    to: "en"
+  });
+
+  if (!result || !result.translations) {
+    definition.innerHTML = "<strong>No definition found.</strong>";
+    return;
+  }
+
+  let html = '';
+  result.translations.forEach((t) => {
+    html += '<div style="margin-bottom:12px;">';
+    html += `<span style="font-size:16px;">${t.translation || "N/A"}</span> `;
+    html += `<span style="font-size:14px; color:#555;">(${t.posTag || "N/A"})</span><br>`;
+    if (t.backTranslations?.length) html += `&nbsp;&nbsp;<strong>Synonyms:</strong> ${t.backTranslations.join(", ")}<br>`;
+    if (t.sourceExample && t.targetExample) {
+      html += `&nbsp;&nbsp;<strong>Example:</strong><br>`;
+      html += `&nbsp;&nbsp;&nbsp;&nbsp;<em>${result.sourceLang}:</em> ${t.sourceExample}<br>`;
+      html += `&nbsp;&nbsp;&nbsp;&nbsp;<em>${result.targetLang}:</em> ${t.targetExample}<br>`;
     }
+    html += '</div>';
+  });
 
-    // TODO: use chrome.storage to get saved source/target languages
-    const sourceLang = "auto";
-    const targetLang = "en";
-
-    const result = await sendRuntimeMessage({
-        type: "GET_DEFINITION",
-        word,
-        from: sourceLang,
-        to: targetLang
-    });
-
-    if (!result || !result.translations) {
-        definition.innerHTML = "<strong>No definition found.</strong>";
-        return;
-    }
-
-    // Format nicely with HTML
-    let html = '';
-    result.translations.forEach((t, idx) => {
-        html += '<div style="margin-bottom:12px;">';
-        
-        // Word + POS
-        html += `<span style="font-size:16px;">${t.translation || "N/A"}</span> `;
-        html += `<span style="font-size:14px; color:#555;">(${t.posTag || "N/A"})</span><br>`;
-        
-        // synonyms
-        if (t.backTranslations && t.backTranslations.length) {
-            html += `&nbsp;&nbsp;<strong>Synonyms:</strong> ${t.backTranslations.join(", ")}<br>`;
-        }
-        
-        // Examples
-        if (t.sourceExample && t.targetExample) {
-            html += `&nbsp;&nbsp;<strong>Example:</strong><br>`;
-            html += `&nbsp;&nbsp;&nbsp;&nbsp;<em>${result.sourceLang}:</em> ${t.sourceExample}<br>`;
-            html += `&nbsp;&nbsp;&nbsp;&nbsp;<em>${result.targetLang}:</em> ${t.targetExample}<br>`;
-        }
-        
-        html += `</div>`;
-    });
-
-    definition.innerHTML = html;
+  definition.innerHTML = html;
 });
 
+// Explain
 explainBtn.addEventListener('click', async () => {
-  const text = textInput.value.trim();
+  const text = textInputExp.value.trim();
   const targetLang = targetLangIn.value;
   const sourceLang = sourceLangIn.value;
+
   const result = await sendRuntimeMessage({
     type: "GET_EXPLANATION",
     text,
-    sourceLang: sourceLang,
-    targetLang: targetLang
+    sourceLang,
+    targetLang
   });
 
-  if (!result) {
-    explain.value = "error";
-  } else {
-      explain.value = result;
-  }
+  explain.value = result || "Error getting explanation.";
 });
